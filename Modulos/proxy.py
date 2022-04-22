@@ -17,7 +17,7 @@ MSG = 'DARKSSH'
 COR = '<font color="null">'
 FTAG = '</font>'
 DEFAULT_HOST = '0.0.0.0:22'
-RESPONSE = "HTTP/1.1 200 " + str(COR) + str(MSG) + str(FTAG) + "\r\n\r\n"
+RESPONSE = f"HTTP/1.1 200 {COR}{MSG}{FTAG}" + "\r\n\r\n"
  
 class Server(threading.Thread):
     def __init__(self, host, port):
@@ -86,13 +86,13 @@ class Server(threading.Thread):
 
 class ConnectionHandler(threading.Thread):
     def __init__(self, socClient, server, addr):
-        threading.Thread.__init__(self)
-        self.clientClosed = False
-        self.targetClosed = True
-        self.client = socClient
-        self.client_buffer = ''
-        self.server = server
-        self.log = 'Conexao: ' + str(addr)
+       threading.Thread.__init__(self)
+       self.clientClosed = False
+       self.targetClosed = True
+       self.client = socClient
+       self.client_buffer = ''
+       self.server = server
+       self.log = f'Conexao: {str(addr)}'
 
     def close(self):
         try:
@@ -151,36 +151,32 @@ class ConnectionHandler(threading.Thread):
             self.server.removeConn(self)
 
     def findHeader(self, head, header):
-        aux = head.find(header + ': ')
-    
-        if aux == -1:
-            return ''
+       aux = head.find(f'{header}: ')
 
-        aux = head.find(':', aux)
-        head = head[aux+2:]
-        aux = head.find('\r\n')
+       if aux == -1:
+           return ''
 
-        if aux == -1:
-            return ''
+       aux = head.find(':', aux)
+       head = head[aux+2:]
+       aux = head.find('\r\n')
 
-        return head[:aux];
+       if aux == -1:
+           return ''
+
+       return head[:aux];
 
     def connect_target(self, host):
-        i = host.find(':')
-        if i != -1:
-            port = int(host[i+1:])
-            host = host[:i]
-        else:
-            if self.method=='CONNECT':
-                port = 443
-            else:
-                port = 22
+       i = host.find(':')
+       if i != -1:
+          port = int(host[i+1:])
+          host = host[:i]
+       else:
+          port = 443 if self.method=='CONNECT' else 22
+       (soc_family, soc_type, proto, _, address) = socket.getaddrinfo(host, port)[0]
 
-        (soc_family, soc_type, proto, _, address) = socket.getaddrinfo(host, port)[0]
-
-        self.target = socket.socket(soc_family, soc_type, proto)
-        self.targetClosed = False
-        self.target.connect(address)
+       self.target = socket.socket(soc_family, soc_type, proto)
+       self.targetClosed = False
+       self.target.connect(address)
 
     def method_CONNECT(self, path):
     	self.log += ' - CONNECT ' + path
